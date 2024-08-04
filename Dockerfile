@@ -1,29 +1,25 @@
-FROM node:18-alpine AS base
+# 使用官方 Node.js 镜像作为基础镜像
+FROM node:18 AS builder
 
-# Install dependencies only when needed
-FROM base AS deps
-# Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed.
-RUN apk add --no-cache libc6-compat
+# 创建并设置工作目录
 WORKDIR /app
 
-# Install dependencies based on the preferred package manager
-COPY package.json yarn.lock* package-lock.json* pnpm-lock.yaml* ./
+# 复制 package.json 和 package-lock.json 文件
+COPY package*.json ./
 
+# 安装应用依赖
+RUN npm install
 
-# Rebuild the source code only when needed
-FROM base AS builder
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
+# 复制应用代码
 COPY . .
 
-# Next.js collects completely anonymous telemetry data about general usage.
-# Learn more here: https://nextjs.org/telemetry
-# Uncomment the following line in case you want to disable telemetry during the build.
-# ENV NEXT_TELEMETRY_DISABLED 1
+# 构建 Next.js 应用
+RUN npm run build
 
+# 使用较小的 Node.js 镜像来运行应用
+FROM node:18-alpine
 
-# Production image, copy all the files and run next
-FROM base AS runner
+# 创建并设置工作目录
 WORKDIR /app
 
 ARG SEARCH_API_KEY
@@ -41,30 +37,18 @@ ENV GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
 ENV OPENAI_API_KEY=${OPENAI_API_KEY}
 
 
-ENV NODE_ENV production
-# Uncomment the following line in case you want to disable telemetry during runtime.
-# ENV NEXT_TELEMETRY_DISABLED 1
-
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
-
+# 复制从 builder 阶段生成的文件
+COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/.next ./
 COPY --from=builder /app/public ./public
 
-# Set the correct permission for prerender cache
-RUN mkdir .next
-RUN chown nextjs:nodejs .next
+# 安装生产环境依赖
+RUN npm install --only=production
 
-# Automatically leverage output traces to reduce image size
-# https://nextjs.org/docs/advanced-features/output-file-tracing
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-
-USER nextjs
-
+# 暴露端口
 EXPOSE 3000
 
-ENV PORT 3000
+# 启动应用
+CMD ["npm", "start"]
 
-# server.js is created by next build from the standalone output
-# https://nextjs.org/docs/pages/api-reference/next-config-js/output
-CMD HOSTNAME="0.0.0.0" node server.js
+
