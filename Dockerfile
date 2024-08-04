@@ -1,3 +1,14 @@
+# 使用 Node.js 官方镜像作为基础镜像
+FROM node:18-alpine AS base
+
+# 设置工作目录
+WORKDIR /app
+
+# 安装依赖
+FROM base AS deps
+COPY package.json package-lock.json* ./
+RUN npm ci --only=production
+
 # 构建应用
 FROM base AS builder
 COPY --from=deps /app/node_modules ./node_modules
@@ -5,8 +16,11 @@ COPY . .
 RUN npm run build
 
 # 生产环境
-FROM base AS runner
+FROM node:18-alpine AS runner
 ENV NODE_ENV production
+
+# 设置工作目录
+WORKDIR /app
 
 # 设置环境变量
 ARG SEARCH_API_KEY
