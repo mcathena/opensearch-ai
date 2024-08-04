@@ -1,6 +1,6 @@
 
 # 使用较小的 Node.js 镜像来运行应用
-FROM node:18-alpine
+FROM node:21-alpine
 
 # 创建并设置工作目录
 WORKDIR /app
