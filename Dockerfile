@@ -4,7 +4,7 @@ FROM node:18-alpine
 
 # 创建并设置工作目录
 WORKDIR /app
-
+COPY . .
 RUN npm install
 
 ARG SEARCH_API_KEY
