@@ -1,4 +1,5 @@
-FROM node:20-alpine
+FROM node:20-buster
+
 
 # 创建并设置工作目录
 WORKDIR /app
