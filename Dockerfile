@@ -7,8 +7,7 @@ WORKDIR /app
 # 更新软件包信息并安装依赖
 RUN apt-get update && apt-get install -y \
     git \
-    curl \
-    libc6-compat
+    curl
 
 # 清理缓存以减小镜像大小
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
