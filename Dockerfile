@@ -3,11 +3,20 @@ FROM node:20-buster
 
 # 创建并设置工作目录
 WORKDIR /app
-RUN apk add --no-cache git curl
-RUN apk add --no-cache libc6-compat
 
+# 更新软件包信息并安装依赖
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    libc6-compat
 
+# 清理缓存以减小镜像大小
+RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# 复制项目文件到容器中
 COPY . .
+
+# 安装 Node.js 依赖
 RUN npm install
 
 ARG SEARCH_API_KEY
