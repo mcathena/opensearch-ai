@@ -4,8 +4,20 @@ WORKDIR /app
 
 # 安装依赖
 RUN apk add --no-cache git curl libc6-compat
+
+# 显示 Node 和 npm 版本
+RUN node --version && npm --version
+
+# 复制 package.json 和 package-lock.json（如果存在）
 COPY package*.json ./
-RUN npm ci
+
+# 尝试使用 npm install 而不是 npm ci
+RUN npm install --verbose
+
+# 如果上面的命令失败，可以尝试以下替代命令：
+# RUN npm install --no-optional --verbose
+# 或者
+# RUN npm install --production --verbose
 
 # 复制源代码并构建
 COPY . .
