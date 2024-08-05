@@ -1,9 +1,11 @@
 
 # 使用较小的 Node.js 镜像来运行应用
-FROM node:21-alpine
+FROM node:20-alpine
 
 # 创建并设置工作目录
 WORKDIR /app
+RUN apk add --no-cache git curl
+
 COPY . .
 RUN npm install
 
