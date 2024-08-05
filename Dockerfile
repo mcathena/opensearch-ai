@@ -1,41 +1,30 @@
-FROM node:20-buster
 
+# 选择一个带有 Node.js 的基础镜像
+FROM node:20-buster
 
 # 创建并设置工作目录
 WORKDIR /app
 
-# 更新软件包信息并安装依赖
-RUN apt-get update && apt-get install -y \
-    git \
-    curl
+# 更新系统并安装 curl 和 git
+RUN apt-get update && apt-get install -y curl git && rm -rf /var/lib/apt/lists/*
 
-# 清理缓存以减小镜像大小
-RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+# 复制 package.json 和 package-lock.json (如果存在)
+COPY package*.json ./
 
-# 复制项目文件到容器中
-COPY . .
-
-# 安装 Node.js 依赖
+# 安装项目依赖
 RUN npm install
 
-ARG SEARCH_API_KEY
-ARG MEM0_API_KEY
-ARG BACKEND_SECURITY_KEY
-ARG GOOGLE_CLIENT_ID
-ARG GOOGLE_CLIENT_SECRET
-ARG OPENAI_API_KEY
+# 复制剩余的项目文件到工作目录
+COPY . .
 
-ENV SEARCH_API_KEY=${SEARCH_API_KEY}
-ENV MEM0_API_KEY=${MEM0_API_KEY}
-ENV BACKEND_SECURITY_KEY=${BACKEND_SECURITY_KEY}
-ENV GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
-ENV GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
-ENV OPENAI_API_KEY=${OPENAI_API_KEY}
+# 构建应用
+RUN npm run build
 
+# 设置环境变量
+ENV NODE_ENV=production
 
-
-# 暴露端口
+# 暴露端口 3000
 EXPOSE 3000
 
-# 启动应用
-CMD ["npm", "run", "dev"]
+# 设置启动命令
+CMD ["npm", "start"]
